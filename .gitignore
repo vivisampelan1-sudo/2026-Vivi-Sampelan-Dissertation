@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Environments and local config
+.env
+.venv/
+venv/
+
+# macOS / Office noise
+.DS_Store
+~$*
+
+# Generated data and analysis outputs
+data/raw/
+data/processed/
+05_results/
+
+# Dissertation artifacts and local references
+_archive/
+Literature /
+*.pdf
+*.docx
+*.xlsx
+
+# Local editor noise
+*.swp
+*.swo

@@ -1,10 +1,30 @@
-# Dissertation 3 — Tokenized Gold Analysis Pipeline
+# Price Discovery and Off-Hours Prediction in Tokenized Gold
 
-A reproducible Python analysis project for a dissertation on tokenized gold, gold spot, and gold futures.
+A reproducible Python analysis pipeline accompanying an MSc dissertation on tokenized gold, gold spot, and gold futures.
+
+**Author:** Vivi Agustini Sampelan
+**Programme:** MSc Banking and Digital Finance, Institute of Finance & Technology, University College London
+**Supervisor:** Hui Gong
+**Year:** 2026
+**Contact:** ucesvas@ucl.ac.uk
 
 **Research focus:** how tightly PAX Gold (`PAXG`) and Tether Gold (`XAUT`) track gold, whether weekday price discovery depends on the benchmark used, and whether weekend token trading contains predictive information about the next gold-market adjustment.
 
 One-line summary of the empirical result: *tokenized gold tracks gold closely in the long run, weekday leadership is benchmark-sensitive rather than robust, and weekend token moves contain predictive information about the following gold-market adjustment.*
+
+## Abstract
+
+This dissertation studies whether tokenized gold is merely a liquid digital version of gold or whether it also contains useful price information when traditional gold markets are less active. The analysis focuses on PAX Gold (PAXG) and Tether Gold (XAUT), which are physically backed tokenized gold assets traded continuously. The study first tests whether tokenized gold is linked to traditional gold in the long run. Using cointegration methods, the results show that both tokens remain closely tied to gold prices. The dissertation then examines weekday price discovery using a VECM and Gonzalo–Granger shares; against spot gold the token can appear to lead, but against gold futures it tends to follow — weekday leadership is therefore benchmark-sensitive rather than robust. The core analysis turns to weekends: weekend token returns help predict the subsequent Monday adjustment in gold prices, a relationship that remains visible in a cleaner hourly pre-reopen design and survives out-of-sample testing, though it is stronger and more stable for XAUT than for PAXG. Placebo, interaction, and decay tests show that this predictive relationship is materially stronger during the weekend closure window and is absorbed rapidly once the traditional market reopens. Weekend volatility also helps explain the size of the following Monday move, with stronger evidence for XAUT. Overall, the dissertation finds evidence consistent with tokenized gold containing useful off-hours information when traditional gold trading is limited, while showing that measured price discovery is sensitive to benchmark choice, timing conventions, and market stress.
+
+## Key results at a glance
+
+| Hypothesis | Question | Headline result |
+|---|---|---|
+| **H1** — long-run linkage | Are the tokens tied to gold over time? | Yes — long-run beta ≈ 0.998 for both PAXG and XAUT; cointegrated with gold |
+| **H2** — weekday price discovery | Does the token lead gold when markets are open? | Benchmark-sensitive: appears to lead vs spot (GG share 0.62–0.80) but follows vs futures (0.28–0.41); bootstrap CIs mean this should be read as suggestive, not robust |
+| **H3** — weekend prediction | Do weekend token moves predict Monday's gold adjustment? | Yes — weekend beta 0.60 (PAXG, t=4.31) and 0.84 (XAUT, t=7.19); holds under an hourly pre-reopen design and out-of-sample (73.1%/77.7% directional accuracy) |
+| **H3 identification** | Is the effect really caused by the closure? | Yes — placebo (mid-week) beta is 6–7x smaller than the weekend beta, and a pooled interaction test confirms the gap is statistically significant (t=3.06 / 5.04) |
+| **H4** — weekend volatility | Does weekend turbulence predict the *size* of Monday's move? | Yes for XAUT (t=3.09), only marginal for PAXG (t=1.92) |
 
 ---
 
@@ -185,3 +205,32 @@ The empirical story runs in one sequence:
 4. That predictive content appears strongest when the traditional market is less able to adjust immediately.
 
 That is why the pipeline is ordered the way it is: each stage gives context for the next one.
+
+---
+
+## 10. Citation
+
+If you use or reference this work, please cite it as:
+
+```
+Sampelan, V.A. (2026). Price Discovery and Off-Hours Prediction in Tokenized Gold:
+Evidence from Spot and Futures Benchmarks. MSc dissertation, Institute of Finance &
+Technology, University College London. Code and data pipeline available at:
+https://github.com/vivisampelan1-sudo/2026-Vivi-Sampelan-Dissertation
+```
+
+BibTeX:
+
+```bibtex
+@mastersthesis{sampelan2026tokenizedgold,
+  author = {Sampelan, Vivi Agustini},
+  title  = {Price Discovery and Off-Hours Prediction in Tokenized Gold: Evidence from Spot and Futures Benchmarks},
+  school = {University College London, Institute of Finance \& Technology},
+  year   = {2026},
+  note   = {Code and data pipeline available at \url{https://github.com/vivisampelan1-sudo/2026-Vivi-Sampelan-Dissertation}}
+}
+```
+
+## 11. License and academic integrity
+
+This repository accompanies an MSc dissertation submitted to University College London. The code is shared publicly for transparency and reproducibility. Unless a `LICENSE` file states otherwise, all rights to the written dissertation and analysis are reserved by the author; the code may be read, run, and adapted for learning and reproduction purposes with attribution. If you build on this work, please cite it (see above) rather than presenting it as your own — this matters both academically and as a courtesy to the research.

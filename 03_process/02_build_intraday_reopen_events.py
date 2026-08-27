@@ -69,6 +69,13 @@ def load_futures_benchmark() -> pd.DataFrame:
     return df.rename(columns={"close": "benchmark_close", "open": "benchmark_open"})
 
 
+def observation_at_timestamp(frame: pd.DataFrame, ts_col: str, value_col: str, target_ts: pd.Timestamp) -> pd.Series | None:
+    subset = frame.loc[frame[ts_col] == target_ts, [ts_col, value_col]].dropna()
+    if subset.empty:
+        return None
+    return subset.sort_values(ts_col).iloc[-1]
+
+
 def build_intraday_reopen_events(asset: str, benchmark_name: str, token_source: str) -> pd.DataFrame:
     token = load_token(asset, token_source)
     if benchmark_name == "gc_f_yahoo":
@@ -87,15 +94,16 @@ def build_intraday_reopen_events(asset: str, benchmark_name: str, token_source: 
     rows = []
     for monday_date in monday_dates:
         friday_cutoff = monday_date - pd.Timedelta(days=3)
+        common_friday_anchor_ts = friday_cutoff + pd.Timedelta(hours=20)
         reopen_ts = comex_week_reopen_utc(monday_date)
 
-        friday_token = last_observation_before(token, "timestamp", "token_price", friday_cutoff + pd.Timedelta(days=1) - pd.Timedelta(seconds=1))
+        friday_token = observation_at_timestamp(token, "timestamp", "token_price", common_friday_anchor_ts)
         pre_reopen_token = last_observation_before(token, "timestamp", "token_price", reopen_ts - pd.Timedelta(seconds=1))
-        friday_benchmark = last_observation_before(
+        friday_benchmark = observation_at_timestamp(
             benchmark,
             "timestamp",
             "benchmark_close",
-            friday_cutoff + pd.Timedelta(days=1) - pd.Timedelta(seconds=1),
+            common_friday_anchor_ts,
         )
         reopen_benchmark = first_observation_at_or_after(benchmark, "timestamp", "benchmark_open", reopen_ts)
 
@@ -108,6 +116,7 @@ def build_intraday_reopen_events(asset: str, benchmark_name: str, token_source: 
         rows.append(
             {
                 "monday_date": monday_date,
+                "common_friday_anchor_ts": common_friday_anchor_ts,
                 "friday_token_ts": friday_token["timestamp"],
                 "pre_reopen_token_ts": pre_reopen_token["timestamp"],
                 "friday_benchmark_ts": friday_benchmark["timestamp"],

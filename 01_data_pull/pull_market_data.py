@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 import os
 import sys
 from pathlib import Path
@@ -23,12 +24,28 @@ from fetch_market_data import (  # noqa: E402
 )
 
 
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Pull daily market data for the dissertation pipeline.")
+    parser.add_argument(
+        "--allow-futures-fallback",
+        action="store_true",
+        help=(
+            "If no Alpha Vantage key/cache is available, silently substitute Yahoo GC=F futures "
+            "as the gold benchmark instead of failing. Runs produced this way will NOT reproduce "
+            "the dissertation's spot-gold tables."
+        ),
+    )
+    return parser.parse_args()
+
+
 def main() -> None:
+    args = parse_args()
     ensure_dirs()
     api_key = os.getenv("ALPHAVANTAGE_API_KEY", "").strip()
 
-    # Primary weekday benchmark: spot gold (XAU).
-    gold = fetch_gold_benchmark(api_key_override=api_key).frame
+    # Primary weekday benchmark: spot gold (XAU). Fails clearly instead of
+    # silently swapping in futures unless --allow-futures-fallback is passed.
+    gold = fetch_gold_benchmark(api_key_override=api_key, allow_futures_fallback=args.allow_futures_fallback).frame
 
     # First-class weekend/tradeability benchmark: gold FUTURES (GC=F).
     # Pulled deliberately every run so the trading, OOS-filter and Monday-gap

@@ -1,0 +1,49 @@
+Reported-results snapshot — capture metadata
+=============================================
+
+What this is
+------------
+The CSV files in this folder are small, git-tracked copies of the headline
+H1-H4 summary numbers pulled from the full (gitignored) 05_results/ output,
+so a reader can compare newly generated results against the numbers reported
+in the dissertation without having to run the pipeline first.
+
+  h1_cointegration.csv    <- design_hypotheses_summary.csv, hypothesis == H1
+  h2_price_discovery.csv  <- vecm_price_discovery_summary.csv (as-is)
+  h3_weekend_prediction.csv <- design_hypotheses_summary.csv, hypothesis == H3
+  h3_hourly_reopening.csv <- intraday_reopen_regression_summary_yahoo_gc_f_yahoo.csv (as-is)
+  h4_weekend_volatility.csv <- volatility_momentum_summary.csv (as-is)
+
+Capture metadata
+----------------
+Captured: 2026-08-27
+Captured from repository commit: 76e89dcdebbdb8707b456a38a86841ed155d394b
+
+Important caveat
+-----------------
+This file records when and from which commit this snapshot was captured
+into version control. It does NOT certify the software environment that
+originally produced the numbers above — that run happened earlier, on a
+different machine, and its exact package versions were not recorded at the
+time. See requirements-lock.txt at the repo root for a reference pinned
+environment (Python 3.10) that is known to run the pipeline successfully;
+if you need exact environment provenance for your own re-run, generate your
+own lock file (`pip freeze > requirements-lock.txt`) immediately after that
+run.
+
+Regenerating this snapshot
+---------------------------
+After re-running the pipeline (bash run_all.sh), refresh this folder with:
+
+  python3 - <<'PY'
+  import pandas as pd
+  from pathlib import Path
+  RES = Path("05_results")
+  OUT = RES / "reported_results"
+  dh = pd.read_csv(RES / "design_hypotheses_summary.csv")
+  dh[dh["hypothesis"] == "H1"].to_csv(OUT / "h1_cointegration.csv", index=False)
+  dh[dh["hypothesis"] == "H3"].to_csv(OUT / "h3_weekend_prediction.csv", index=False)
+  pd.read_csv(RES / "vecm_price_discovery_summary.csv").to_csv(OUT / "h2_price_discovery.csv", index=False)
+  pd.read_csv(RES / "intraday_reopen_regression_summary_yahoo_gc_f_yahoo.csv").to_csv(OUT / "h3_hourly_reopening.csv", index=False)
+  pd.read_csv(RES / "volatility_momentum_summary.csv").to_csv(OUT / "h4_weekend_volatility.csv", index=False)
+  PY

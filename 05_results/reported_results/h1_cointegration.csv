@@ -1,0 +1,11 @@
+asset,hypothesis,metric,value
+PAXG,H1,long_run_gold_beta,0.9982353310236557
+PAXG,H1,long_run_beta_t_stat_hac,728.2007288950452
+PAXG,H1,engle_granger_residual_adf_stat,-16.392972960470843
+PAXG,H1,engle_granger_crit_5pct,-3.34
+PAXG,H1,cointegration_supported,True
+XAUT,H1,long_run_gold_beta,0.9983024593307033
+XAUT,H1,long_run_beta_t_stat_hac,897.399434377167
+XAUT,H1,engle_granger_residual_adf_stat,-13.225886655530223
+XAUT,H1,engle_granger_crit_5pct,-3.34
+XAUT,H1,cointegration_supported,True

@@ -17,7 +17,9 @@ venv/
 # Generated data and analysis outputs
 data/raw/
 data/processed/
-05_results/
+05_results/*
+!05_results/reported_results/
+!05_results/reported_results/**
 
 # Dissertation artifacts and local references
 _archive/

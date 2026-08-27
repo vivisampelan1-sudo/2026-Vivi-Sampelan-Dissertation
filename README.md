@@ -14,7 +14,7 @@ One-line summary of the empirical result: *tokenized gold tracks gold closely in
 
 ## Abstract
 
-This dissertation studies whether tokenized gold is merely a liquid digital version of gold or whether it also contains useful price information when traditional gold markets are less active. The analysis focuses on PAX Gold (PAXG) and Tether Gold (XAUT), which are physically backed tokenized gold assets traded continuously. The study first tests whether tokenized gold is linked to traditional gold in the long run. Using cointegration methods, the results show that both tokens remain closely tied to gold prices. The dissertation then examines weekday price discovery using a VECM and Gonzalo–Granger shares; against spot gold the token can appear to lead, but against gold futures it tends to follow — weekday leadership is therefore benchmark-sensitive rather than robust. The core analysis turns to weekends: weekend token returns help predict the subsequent Monday adjustment in gold prices, a relationship that remains visible in a cleaner hourly pre-reopen design and survives out-of-sample testing, though it is stronger and more stable for XAUT than for PAXG. Placebo, interaction, and decay tests show that this predictive relationship is materially stronger during the weekend closure window and is absorbed rapidly once the traditional market reopens. Weekend volatility also helps explain the size of the following Monday move, with stronger evidence for XAUT. Overall, the dissertation finds evidence consistent with tokenized gold containing useful off-hours information when traditional gold trading is limited, while showing that measured price discovery is sensitive to benchmark choice, timing conventions, and market stress.
+This dissertation studies whether tokenized gold is merely a liquid digital version of gold or whether it also contains useful price information when traditional gold markets are less active. The analysis focuses on PAX Gold (PAXG) and Tether Gold (XAUT), which are physically backed tokenized gold assets traded continuously. The study first tests whether tokenized gold is linked to traditional gold in the long run. Using cointegration methods, the results show that both tokens remain closely tied to gold prices. The dissertation then examines weekday price discovery using an Engle–Granger two-step error-correction system and Gonzalo–Granger shares; against spot gold the token can appear to lead, but against gold futures it tends to follow — weekday leadership is therefore benchmark-sensitive rather than robust. The core analysis turns to weekends: weekend token returns help predict the subsequent Monday adjustment in gold prices, a relationship that remains visible in a cleaner hourly pre-reopen design and survives out-of-sample testing, though it is stronger and more stable for XAUT than for PAXG. Placebo, interaction, and decay tests show that this predictive relationship is materially stronger during the weekend closure window and is absorbed rapidly once the traditional market reopens. Weekend volatility also helps explain the size of the following Monday move, with stronger evidence for XAUT. Overall, the dissertation finds evidence consistent with tokenized gold containing useful off-hours information when traditional gold trading is limited, while showing that measured price discovery is sensitive to benchmark choice, timing conventions, and market stress.
 
 ## Key results at a glance
 
@@ -23,7 +23,7 @@ This dissertation studies whether tokenized gold is merely a liquid digital vers
 | **H1** — long-run linkage | Are the tokens tied to gold over time? | Yes — long-run beta ≈ 0.998 for both PAXG and XAUT; cointegrated with gold |
 | **H2** — weekday price discovery | Does the token lead gold when markets are open? | Benchmark-sensitive: appears to lead vs spot (GG share 0.62–0.80) but follows vs futures (0.28–0.41); bootstrap CIs mean this should be read as suggestive, not robust |
 | **H3** — weekend prediction | Do weekend token moves predict Monday's gold adjustment? | Yes — weekend beta 0.60 (PAXG, t=4.31) and 0.84 (XAUT, t=7.19); holds under an hourly pre-reopen design and out-of-sample (73.1%/77.7% directional accuracy) |
-| **H3 identification** | Is the effect really caused by the closure? | Yes — placebo (mid-week) beta is 6–7x smaller than the weekend beta, and a pooled interaction test confirms the gap is statistically significant (t=3.06 / 5.04) |
+| **H3 identification** | Is the predictive relationship stronger during the closure window? | Yes — placebo (mid-week) beta is 6–7x smaller than the weekend beta, and a pooled interaction test confirms the gap is statistically significant (t=3.06 / 5.04). This is consistent with a closure-specific effect but does not establish causality. |
 | **H4** — weekend volatility | Does weekend turbulence predict the *size* of Monday's move? | Yes for XAUT (t=3.09), only marginal for PAXG (t=1.92) |
 
 ---
@@ -80,14 +80,14 @@ The methodology runs in the same order as the hypotheses, each building on the l
 |---|---|---|---|
 | Preliminary | ADF unit-root test | Are the price series non-stationary (do they "wander")? | — |
 | Linkage | Engle–Granger cointegration | Do token and gold share a stable long-run relationship? | **H1** |
-| Weekday price discovery | VECM + Gonzalo–Granger, **both benchmarks** | When gold is open, does the token lead? | **H2** |
+| Weekday price discovery | Engle–Granger two-step ECM + Gonzalo–Granger, **both benchmarks** | When gold is open, does the token lead? | **H2** |
 | Weekend prediction | Predictive regression (OLS + HAC) + out-of-sample | Does the weekend token move predict Monday gold? | **H3** |
-| *Identification* | **Placebo** (mid-week) + **decay** (Tue/Wed) | Is the effect really caused by the closure? | *H3* |
+| *Identification* | **Placebo** (mid-week) + **decay** (Tue/Wed) | Is the relationship stronger during the closure window? | *H3* |
 | Uncertainty transmission | Weekend volatility → magnitude of Monday move | Does the token also predict *how big* the move is? | **H4** |
 | Efficiency (discussion) | Reopening gap vs intraday session | How fast is the information impounded? | — |
 | Robustness (nulls) | Momentum, asymmetry, liquidity conditioning | Tested; no robust effect | — |
 
-All regressions use **HAC (Newey–West) standard errors** because financial returns are heteroskedastic and autocorrelated; the models are OLS-based but extended to handle non-stationarity (cointegration/VECM) and those error properties (HAC).
+All regressions use **HAC (Newey–West) standard errors** because financial returns are heteroskedastic and autocorrelated; the models are OLS-based but extended to handle non-stationarity (Engle–Granger cointegration / error-correction) and those error properties (HAC).
 
 ---
 
@@ -100,6 +100,17 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 ```
+
+`requirements.txt` uses `>=` bounds, which don't guarantee identical numbers years from now. `requirements-lock.txt` records one known-working pinned combination (Python 3.10) — use `pip install -r requirements-lock.txt` instead if you want that exact snapshot. It is a reference lock, not a certified record of the environment that produced the numbers in `05_results/`; if you need that provenance for your own re-run, generate your own lock file at that time (`pip freeze > requirements-lock.txt`).
+
+Reproducing the dissertation's spot-gold results requires an Alpha Vantage API key (free tier is enough):
+
+```bash
+cp .env.example .env
+# then edit .env and set ALPHAVANTAGE_API_KEY=<your key>
+```
+
+Without a valid key (or a cached `data/raw/gold_alphavantage_daily.json`), the data-pull scripts fail with a clear error rather than silently substituting Yahoo GC=F futures as the gold benchmark. Pass `--allow-futures-fallback` to `02_data_pull/pull_market_data.py` if you explicitly want that substitution — note that results produced this way will **not** match the spot-gold tables in the dissertation.
 
 ## 6. How to run
 
@@ -143,6 +154,16 @@ python3 04_analyze/plot_benchmark_reversal.py
 
 **Optional — intraday / hourly robustness block**
 
+This block needs three 60-minute raw files that are **not** committed to the repo (they're large and are `.gitignore`d, like everything else in `data/raw/`). Fetch them first — this hits Yahoo Finance and takes a few minutes:
+
+```bash
+# 0. Download the hourly raw files (needed once; internet required)
+python3 02_data_pull/pull_intraday_reopen_data.py --asset paxg --token-provider yahoo --gold-provider yahoo_futures
+python3 02_data_pull/pull_intraday_reopen_data.py --asset xaut --token-provider yahoo --gold-provider yahoo_futures
+```
+
+That writes `data/raw/paxg_yahoo_60m.csv`, `data/raw/xaut_yahoo_60m.csv`, and `data/raw/gc_f_yahoo_60m.csv`. Once those exist, `bash run_all.sh` will pick up the hourly block automatically — or run it explicitly:
+
 ```bash
 python3 03_process/02_build_intraday_reopen_events.py --asset paxg --token-source yahoo --benchmark gc_f_yahoo
 python3 03_process/02_build_intraday_reopen_events.py --asset xaut --token-source yahoo --benchmark gc_f_yahoo
@@ -150,6 +171,8 @@ python3 04_analyze/11_run_intraday_reopen_regression.py --token-source yahoo --b
 python3 04_analyze/12_run_intraday_sensitivity.py --token-source yahoo --benchmark gc_f_yahoo
 python3 04_analyze/13_run_hourly_volatility_robustness.py
 ```
+
+Without the hourly files, the daily pipeline still runs and reports its own (weaker, disclosed-as-such) daily-design evidence for the same identification questions — but Tables 11, 12, and 16, which report the hourly pre-reopen results, can't be reproduced until this step is run.
 
 All outputs land in `05_results/`.
 
@@ -160,7 +183,7 @@ All outputs land in `05_results/`.
 Two numbers unlock every table:
 
 - **Beta (β)** = the **size** of the effect (e.g. weekend β = 0.6 means gold moves 0.6 for every 1 the token moves).
-- **t (t-statistic)** = how much you can **trust** it. Rule of thumb: **|t| > ~2 → real; below 2 → indistinguishable from zero.** Bigger t = more confident.
+- **t (t-statistic)** measures the estimated coefficient relative to its standard error. As an approximate large-sample rule for a two-sided 5% test, **|t| > 1.96 indicates statistical significance**; it does not by itself establish economic importance, causality, or robustness.
 
 The one number to look at per analysis:
 
@@ -168,7 +191,7 @@ The one number to look at per analysis:
 |---|---|---|---|
 | `01_run_vecm_price_discovery` | Which market leads on weekdays? | `token_gonzalo_granger_share`, **both benchmarks** | spot 0.62/0.80 vs futures 0.28/0.41 → **benchmark-sensitive** |
 | `option2` / `02_run_design_hypotheses` | Does weekend predict Monday? | weekend beta `t_stat_hac` | 4.3 / 7.3 → **significant** |
-| `10_run_placebo_decay` | Is it caused by the closure? | placebo vs weekend beta; Tuesday t | weekend effect is much larger; Tuesday effect fades out |
+| `10_run_placebo_decay` | Is the relationship stronger during the closure window? | placebo vs weekend beta; Tuesday t | weekend effect is much larger; Tuesday effect fades out |
 | `08_run_volatility_momentum` | Does it predict move *size*? | `weekend_rv_t` | XAUT 3.09 ✅ / PAXG 1.92 (marginal) |
 | `08` (momentum) | Does momentum add anything? | `momentum_5_t`, `momentum_20_t` | inconsistent → **null** |
 | `09_run_liquidity_conditioning` | Does more liquidity strengthen it? | interaction t | measures disagree → **null** |
@@ -184,14 +207,14 @@ Key summary files in `05_results/`:
 - `weekend_marginal_contribution_summary.md` — the signal's own share
 - `oos_precision_summary.md` — out-of-sample precision
 - `monday_gap_robustness_summary.md` — robustness
-- `trading_strategy_summary.md` — economic significance (H4)
+- `trading_strategy_summary.md` — reopening efficiency and post-reopen tradeability
 - `HOW TO READ MY RESULTS.md` and `final_results_interpretation.md` — plain-English interpretation
 
 ---
 
 ## 8. Reproducibility notes
 
-- `run_all.sh` regenerates the full analysis pipeline plus the main figure files.
+- `run_all.sh` regenerates the full daily analysis pipeline and the two H2/H3 figures (`14_plot_h3_prediction.py`, `plot_benchmark_reversal.py`). The dissertation's descriptive Figures 1–3 (token/gold price trends, basis over time, daily token volume) do not currently have a generating script in this repo and are not reproduced by `run_all.sh`.
 - `05_results/` and `data/` are generated artifacts and are ignored by Git by default.
 - If you want to version-lock outputs as well, remove those folders from `.gitignore` before your first commit.
 

@@ -1,0 +1,11 @@
+metric,value
+weekday_rows,2339
+calendar_rows,2340
+start_date,2020-02-07
+end_date,2026-07-03
+weekday_mean_basis,0.0002997665543114805
+calendar_mean_basis,0.00030280476913412086
+weekday_mean_abs_basis,0.005358098141783028
+calendar_mean_abs_basis,0.005358974676440083
+weekday_mean_premium_discount_pct,0.033807477053600085
+calendar_mean_premium_discount_pct,0.034110837328230226

@@ -20,7 +20,7 @@ have_intraday_inputs() {
   [[ -f data/raw/gc_f_yahoo_60m.csv ]]
 }
 
-echo "[1/5] Pull market data (needs internet)..."
+echo "[1/5] Pull market data (needs internet + ALPHAVANTAGE_API_KEY in .env; see .env.example)..."
 "$PYTHON_BIN" 02_data_pull/pull_market_data.py
 
 echo "[2/5] Build weekend event tables used by the core design..."

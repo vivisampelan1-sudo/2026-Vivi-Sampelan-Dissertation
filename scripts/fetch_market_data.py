@@ -64,6 +64,15 @@ def parse_args() -> argparse.Namespace:
         default="",
         help="Optional Alpha Vantage API key. Overrides environment and .env values.",
     )
+    parser.add_argument(
+        "--allow-futures-fallback",
+        action="store_true",
+        help=(
+            "If no Alpha Vantage key/cache is available, silently substitute Yahoo GC=F futures "
+            "as the gold benchmark instead of failing. Runs produced this way will NOT reproduce "
+            "the dissertation's spot-gold tables."
+        ),
+    )
     return parser.parse_args()
 
 
@@ -200,7 +209,18 @@ def fetch_gold_benchmark_from_yahoo() -> FetchResult:
     return FetchResult(name="gold_yahoo", frame=frame)
 
 
-def fetch_gold_benchmark(api_key_override: str = "") -> FetchResult:
+def fetch_gold_benchmark(api_key_override: str = "", allow_futures_fallback: bool = False) -> FetchResult:
+    """Fetch the SPOT gold benchmark (Alpha Vantage), which is the conceptual
+    benchmark used throughout the dissertation's weekday/weekend design.
+
+    This does NOT silently substitute gold futures (GC=F) when no Alpha
+    Vantage key or cache is available. Reproducing the reported spot-gold
+    results requires an Alpha Vantage key (see .env.example). Pass
+    allow_futures_fallback=True (or --allow-futures-fallback on the CLI) to
+    opt into the old silent-fallback behaviour for quick experimentation —
+    results produced this way use GC=F as the benchmark and will NOT match
+    the spot-gold tables in the dissertation.
+    """
     api_key = api_key_override.strip() or os.getenv("ALPHAVANTAGE_API_KEY", "").strip() or read_api_key_from_dotenv()
     if api_key:
         try:
@@ -208,17 +228,42 @@ def fetch_gold_benchmark(api_key_override: str = "") -> FetchResult:
             print("Using Alpha Vantage GOLD_SILVER_HISTORY for the gold benchmark.")
             return result
         except Exception as exc:
-            print(f"Alpha Vantage gold pull failed, falling back to Yahoo GC=F proxy: {exc}")
+            print(f"Alpha Vantage gold pull failed: {exc}")
+            if not allow_futures_fallback:
+                raise RuntimeError(
+                    "Alpha Vantage spot-gold pull failed and --allow-futures-fallback was not set. "
+                    "Fix the API key/connection, or re-run with --allow-futures-fallback if you "
+                    "explicitly want a GC=F-benchmarked (non-reproducing) run."
+                ) from exc
+            print("--allow-futures-fallback is set: falling back to Yahoo GC=F proxy.")
 
-    if ALPHAVANTAGE_CACHE_PATH.exists():
+    elif ALPHAVANTAGE_CACHE_PATH.exists():
         try:
             result = fetch_gold_benchmark_from_cached_alphavantage()
             print("Using cached Alpha Vantage GOLD_SILVER_HISTORY for the gold benchmark.")
             return result
         except Exception as exc:
-            print(f"Cached Alpha Vantage gold load failed, falling back to Yahoo GC=F proxy: {exc}")
+            print(f"Cached Alpha Vantage gold load failed: {exc}")
+            if not allow_futures_fallback:
+                raise RuntimeError(
+                    "Cached Alpha Vantage spot-gold data failed to load and --allow-futures-fallback "
+                    "was not set. Provide a working ALPHAVANTAGE_API_KEY (see .env.example), or "
+                    "re-run with --allow-futures-fallback if you explicitly want a GC=F-benchmarked "
+                    "(non-reproducing) run."
+                ) from exc
+            print("--allow-futures-fallback is set: falling back to Yahoo GC=F proxy.")
 
-    print("Using Yahoo GC=F as the fallback gold benchmark.")
+    elif not allow_futures_fallback:
+        raise RuntimeError(
+            "No ALPHAVANTAGE_API_KEY found (checked --api-key, the ALPHAVANTAGE_API_KEY environment "
+            "variable, and .env) and no cached Alpha Vantage data exists at "
+            f"{ALPHAVANTAGE_CACHE_PATH}. Reproducing the dissertation's spot-gold results requires "
+            "an Alpha Vantage key: copy .env.example to .env and fill in ALPHAVANTAGE_API_KEY. "
+            "If you explicitly want a GC=F-benchmarked run instead (this will NOT reproduce the "
+            "spot-gold tables), re-run with --allow-futures-fallback."
+        )
+
+    print("Using Yahoo GC=F as the fallback gold benchmark (--allow-futures-fallback).")
     return fetch_gold_benchmark_from_yahoo()
 
 
@@ -318,7 +363,7 @@ def main() -> None:
     asset = normalize_asset(args.asset)
     ensure_dirs()
     token = fetch_tokenized_gold(asset).frame
-    gold = fetch_gold_benchmark(api_key_override=args.api_key).frame
+    gold = fetch_gold_benchmark(api_key_override=args.api_key, allow_futures_fallback=args.allow_futures_fallback).frame
     weekday_dataset = build_weekday_basis_dataset(token, gold)
     calendar_dataset = build_calendar_basis_dataset(token, gold)
     write_outputs(asset, weekday_dataset, calendar_dataset)

@@ -79,3 +79,16 @@ The code uses standard scientific Python packages only:
 - generated tables and figures: `05_results/`
 
 These generated folders are ignored by `.gitignore` so the repository stays focused on code.
+
+## Why the raw data itself isn't archived in this repository
+
+The raw price data is not republished here, and this is a deliberate choice rather than an oversight:
+
+- **Yahoo Finance's Terms of Service** (legal.yahoo.com/us/en/yahoo/terms/otos) prohibit both automated/programmatic access without prior permission and public redistribution of any data obtained from their services, with no exception for academic or non-commercial use. Since most of the raw data here (PAXG, XAUT, and GC=F futures, both daily and 60-minute) comes from Yahoo Finance's endpoints, publicly archiving those files — on GitHub, Zenodo, or anywhere else — would not be compliant with those terms.
+- **Alpha Vantage's Terms of Service** (alphavantage.co/terms_of_service) explicitly permit research use, but are ambiguous on whether publicly redistributing the downloaded files to third parties counts as "commercial use" under their definition. This is a genuine gray area, not a clear yes.
+
+Given that, this repository takes the more conservative route: the code to re-fetch the data is fully open and documented above, but the raw files themselves stay local and gitignored. If you need to verify a specific reported result matches the exact data originally used, `04_data/CHECKSUMS.sha256` records the SHA-256 hash of every raw and processed file used to produce the numbers in this dissertation — hashes aren't the data itself and don't raise the same redistribution question, so re-fetching the same date ranges and comparing hashes lets you confirm you have the identical dataset without the repository needing to host the vendor's data. Regenerate this file after a fresh pull with:
+
+```bash
+find 04_data/raw 04_data/processed -type f | sort | xargs shasum -a 256 > 04_data/CHECKSUMS.sha256
+```

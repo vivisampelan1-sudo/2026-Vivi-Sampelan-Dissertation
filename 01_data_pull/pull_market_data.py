@@ -49,12 +49,12 @@ def main() -> None:
 
     # First-class weekend/tradeability benchmark: gold FUTURES (GC=F).
     # Pulled deliberately every run so the trading, OOS-filter and Monday-gap
-    # scripts always read fresh futures data (data/raw/gold_yahoo_gc_f_1y.json),
+    # scripts always read fresh futures data (04_data/raw/gold_yahoo_gc_f_1y.json),
     # rather than a stale cached file that was only refreshed on fallback.
     futures = fetch_gold_benchmark_from_yahoo()
     print(f"Pulled gold futures GC=F: {len(futures.frame)} rows "
           f"({futures.frame['date'].min()} to {futures.frame['date'].max()}) "
-          f"-> data/raw/gold_yahoo_gc_f_1y.json")
+          f"-> 04_data/raw/gold_yahoo_gc_f_1y.json")
     print()
 
     for asset in ["paxg", "xaut"]:

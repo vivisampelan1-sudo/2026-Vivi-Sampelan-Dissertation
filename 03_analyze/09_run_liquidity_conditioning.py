@@ -33,7 +33,7 @@ from asset_config import asset_name, normalize_asset  # noqa: E402
 from econometrics_utils import default_hac_lags, fit_ols  # noqa: E402
 
 RESULTS_DIR = DISS3_DIR / "05_results"
-RAW_DIR = DISS3_DIR / "data" / "raw"
+RAW_DIR = DISS3_DIR / "04_data" / "raw"
 ASSETS = ["paxg", "xaut"]
 
 

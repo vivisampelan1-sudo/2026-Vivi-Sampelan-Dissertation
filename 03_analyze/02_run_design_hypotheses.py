@@ -11,7 +11,7 @@ THIS_DIR = Path(__file__).resolve().parent
 DISS3_DIR = THIS_DIR.parent
 PROJECT_ROOT = DISS3_DIR.parent
 SHARED_SCRIPTS_DIR = DISS3_DIR / "scripts"
-PROCESS_SCRIPTS_DIR = DISS3_DIR / "03_process"
+PROCESS_SCRIPTS_DIR = DISS3_DIR / "02_process"
 if str(SHARED_SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(SHARED_SCRIPTS_DIR))
 if str(PROCESS_SCRIPTS_DIR) not in sys.path:

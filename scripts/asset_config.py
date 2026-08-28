@@ -5,8 +5,8 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-RAW_DIR = ROOT / "data" / "raw"
-PROCESSED_DIR = ROOT / "data" / "processed"
+RAW_DIR = ROOT / "04_data" / "raw"
+PROCESSED_DIR = ROOT / "04_data" / "processed"
 RESULTS_DIR = ROOT / "05_results"
 
 ASSET_TO_TICKER = {

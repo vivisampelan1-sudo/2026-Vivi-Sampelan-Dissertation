@@ -22,7 +22,7 @@ from econometrics_utils import adf_test, default_hac_lags, fit_ols  # noqa: E402
 
 
 RESULTS_DIR = DISS3_DIR / "05_results"
-RAW_DIR = DISS3_DIR / "data" / "raw"
+RAW_DIR = DISS3_DIR / "04_data" / "raw"
 ASSETS = ["paxg", "xaut"]
 BENCHMARKS = ["spot", "futures"]
 MAX_DIFF_LAGS = 5

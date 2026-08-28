@@ -16,10 +16,18 @@ if str(SHARED_SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(SHARED_SCRIPTS_DIR))
 
 from econometrics_utils import default_hac_lags, fit_ols  # noqa: E402
+from intraday_reopen_utils import comex_week_reopen_utc  # noqa: E402
 
 
 RESULTS_DIR = DISS3_DIR / "05_results"
 ASSETS = ["paxg", "xaut"]
+
+# A reopen bar is treated as "delayed" (holiday, missing Sunday-evening Yahoo
+# bars, thin-liquidity gap, etc.) if the first available benchmark observation
+# at/after the expected COMEX Sunday-evening reopen is more than this many
+# hours later than expected. Anything under this is ordinary 60-minute bar
+# granularity, not a horizon problem.
+DELAYED_REOPEN_THRESHOLD_HOURS = 2.0
 
 
 def parse_args() -> argparse.Namespace:
@@ -31,10 +39,13 @@ def parse_args() -> argparse.Namespace:
 
 def load_events(asset: str, token_source: str, benchmark: str) -> pd.DataFrame:
     path = RESULTS_DIR / f"{asset}_intraday_reopen_events_{token_source}_{benchmark}.csv"
-    return pd.read_csv(
+    df = pd.read_csv(
         path,
         parse_dates=["monday_date", "friday_benchmark_ts", "reopen_benchmark_ts"],
     ).sort_values("monday_date").reset_index(drop=True)
+    expected_reopen = df["monday_date"].apply(comex_week_reopen_utc)
+    df["reopen_delay_hours"] = (df["reopen_benchmark_ts"] - expected_reopen).dt.total_seconds() / 3600.0
+    return df
 
 
 def fit_main(df: pd.DataFrame) -> dict[str, float]:
@@ -128,6 +139,17 @@ def scenario_rows(asset: str, df: pd.DataFrame) -> list[dict[str, object]]:
         kept = ranked_gap.iloc[k:].drop(columns=["abs_gap"]).copy()
         add_row(f"exclude_top_{k}_abs_gap", kept)
 
+    # Robustness check: for holidays or thin Sunday-evening liquidity, the
+    # "first available bar at/after the expected reopen" can land several
+    # hours later than intended, so the measured gap spans a longer horizon
+    # than the other events. Report the same regression with those delayed
+    # reopens dropped, so a reader can see whether they're driving the result.
+    delayed = df["reopen_delay_hours"] > DELAYED_REOPEN_THRESHOLD_HOURS
+    add_row(
+        f"exclude_delayed_reopen_gt_{DELAYED_REOPEN_THRESHOLD_HOURS:g}h",
+        df.loc[~delayed].copy(),
+    )
+
     huber = huber_irls(df)
     rows.append(
             {
@@ -194,12 +216,30 @@ def top_event_rows(asset: str, df: pd.DataFrame, top_k: int = 10) -> pd.DataFram
     ]
 
 
+def delayed_reopen_rows(asset: str, df: pd.DataFrame) -> pd.DataFrame:
+    """Every event whose reopen bar arrived later than expected, so the
+    exclusion scenario above is auditable rather than a black box."""
+    flagged = df[df["reopen_delay_hours"] > DELAYED_REOPEN_THRESHOLD_HOURS].copy()
+    flagged.insert(0, "asset", asset.upper())
+    return flagged[
+        [
+            "asset",
+            "monday_date",
+            "reopen_delay_hours",
+            "reopen_benchmark_ts",
+            "weekend_token_return_pre_reopen",
+            "benchmark_reopen_gap_return",
+        ]
+    ].sort_values("monday_date")
+
+
 def main() -> None:
     args = parse_args()
     summary_rows: list[dict[str, object]] = []
     loo_summaries: list[dict[str, object]] = []
     loo_details: list[pd.DataFrame] = []
     top_events: list[pd.DataFrame] = []
+    delayed_events: list[pd.DataFrame] = []
 
     for asset in ASSETS:
         df = load_events(asset, args.token_source, args.benchmark)
@@ -208,26 +248,31 @@ def main() -> None:
         loo_details.append(detail)
         loo_summaries.append(summary)
         top_events.append(top_event_rows(asset, df))
+        delayed_events.append(delayed_reopen_rows(asset, df))
 
     summary_df = pd.DataFrame(summary_rows)
     loo_summary_df = pd.DataFrame(loo_summaries)
     loo_detail_df = pd.concat(loo_details, ignore_index=True)
     top_events_df = pd.concat(top_events, ignore_index=True)
+    delayed_events_df = pd.concat(delayed_events, ignore_index=True)
 
     summary_path = RESULTS_DIR / f"intraday_sensitivity_summary_{args.token_source}_{args.benchmark}.csv"
     loo_summary_path = RESULTS_DIR / f"intraday_leave_one_out_summary_{args.token_source}_{args.benchmark}.csv"
     loo_detail_path = RESULTS_DIR / f"intraday_leave_one_out_details_{args.token_source}_{args.benchmark}.csv"
     top_events_path = RESULTS_DIR / f"intraday_top_events_{args.token_source}_{args.benchmark}.csv"
+    delayed_events_path = RESULTS_DIR / f"intraday_delayed_reopen_events_{args.token_source}_{args.benchmark}.csv"
 
     summary_df.to_csv(summary_path, index=False)
     loo_summary_df.to_csv(loo_summary_path, index=False)
     loo_detail_df.to_csv(loo_detail_path, index=False)
     top_events_df.to_csv(top_events_path, index=False)
+    delayed_events_df.to_csv(delayed_events_path, index=False)
 
     print(f"Saved: {summary_path}")
     print(f"Saved: {loo_summary_path}")
     print(f"Saved: {loo_detail_path}")
     print(f"Saved: {top_events_path}")
+    print(f"Saved: {delayed_events_path}")
     print()
     print(summary_df.to_string(index=False))
     print()

@@ -21,7 +21,7 @@ import pandas as pd
 from scipy import stats
 
 DISS3 = Path(__file__).resolve().parent.parent
-RAW = DISS3 / "data" / "raw"
+RAW = DISS3 / "04_data" / "raw"
 RESULTS = DISS3 / "05_results"
 COST_BPS = 5.0  # round-trip transaction cost on liquid gold futures
 

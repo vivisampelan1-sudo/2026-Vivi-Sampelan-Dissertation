@@ -21,21 +21,21 @@ Note: the dissertation's descriptive Figures 1–3 (price trends, basis over tim
 
 ## Alpha Vantage key (spot gold benchmark)
 
-The spot-gold benchmark used throughout the dissertation comes from Alpha Vantage. Copy `.env.example` to `.env` and set `ALPHAVANTAGE_API_KEY` before running step 1. Without a valid key (or a cached `data/raw/gold_alphavantage_daily.json`), `02_data_pull/pull_market_data.py` now fails with a clear error rather than silently substituting Yahoo GC=F futures as the benchmark — pass `--allow-futures-fallback` if you explicitly want that substitution (results won't match the dissertation's spot-gold tables).
+The spot-gold benchmark used throughout the dissertation comes from Alpha Vantage. Copy `.env.example` to `.env` and set `ALPHAVANTAGE_API_KEY` before running step 1. Without a valid key (or a cached `04_data/raw/gold_alphavantage_daily.json`), `01_data_pull/pull_market_data.py` now fails with a clear error rather than silently substituting Yahoo GC=F futures as the benchmark — pass `--allow-futures-fallback` if you explicitly want that substitution (results won't match the dissertation's spot-gold tables).
 
 ## Intraday / hourly robustness block
 
-The intraday and hourly reopening checks depend on three 60-minute raw files that are not committed to the repo (`.gitignore`d, like all of `data/raw/`):
+The intraday and hourly reopening checks depend on three 60-minute raw files that are not committed to the repo (`.gitignore`d, like all of `04_data/raw/`):
 
-- `data/raw/paxg_yahoo_60m.csv`
-- `data/raw/xaut_yahoo_60m.csv`
-- `data/raw/gc_f_yahoo_60m.csv`
+- `04_data/raw/paxg_yahoo_60m.csv`
+- `04_data/raw/xaut_yahoo_60m.csv`
+- `04_data/raw/gc_f_yahoo_60m.csv`
 
 Fetch them with the intraday pull script before running `run_all.sh`:
 
 ```bash
-python3 02_data_pull/pull_intraday_reopen_data.py --asset paxg --token-provider yahoo --gold-provider yahoo_futures
-python3 02_data_pull/pull_intraday_reopen_data.py --asset xaut --token-provider yahoo --gold-provider yahoo_futures
+python3 01_data_pull/pull_intraday_reopen_data.py --asset paxg --token-provider yahoo --gold-provider yahoo_futures
+python3 01_data_pull/pull_intraday_reopen_data.py --asset xaut --token-provider yahoo --gold-provider yahoo_futures
 ```
 
 Once those files are present, `run_all.sh` will automatically run:
@@ -48,13 +48,13 @@ If those files are missing, the runner skips that block and still completes the 
 
 ## Main entry points
 
-- `02_data_pull/pull_market_data.py`: daily raw data pull
+- `01_data_pull/pull_market_data.py`: daily raw data pull
 - `scripts/option2_weekend_design.py`: cleaned daily datasets + core weekend-event construction
-- `04_analyze/01_run_vecm_price_discovery.py`: weekday VECM and GG shares
-- `04_analyze/02_run_design_hypotheses.py`: H1 and core H3 outputs
-- `04_analyze/08_run_volatility_momentum.py`: H4 and momentum checks
-- `04_analyze/10_run_placebo_decay.py`: placebo / decay checks
-- `04_analyze/13_run_placebo_weekend_interaction.py`: pooled interaction test
+- `03_analyze/01_run_vecm_price_discovery.py`: weekday VECM and GG shares
+- `03_analyze/02_run_design_hypotheses.py`: H1 and core H3 outputs
+- `03_analyze/08_run_volatility_momentum.py`: H4 and momentum checks
+- `03_analyze/10_run_placebo_decay.py`: placebo / decay checks
+- `03_analyze/13_run_placebo_weekend_interaction.py`: pooled interaction test
 
 ## Dependencies
 
@@ -74,8 +74,8 @@ The code uses standard scientific Python packages only:
 
 ## Output locations
 
-- raw inputs: `data/raw/`
-- processed datasets: `data/processed/`
+- raw inputs: `04_data/raw/`
+- processed datasets: `04_data/processed/`
 - generated tables and figures: `05_results/`
 
 These generated folders are ignored by `.gitignore` so the repository stays focused on code.

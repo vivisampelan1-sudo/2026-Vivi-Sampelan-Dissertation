@@ -13,11 +13,18 @@ in the dissertation without having to run the pipeline first.
   h3_weekend_prediction.csv <- design_hypotheses_summary.csv, hypothesis == H3
   h3_hourly_reopening.csv <- intraday_reopen_regression_summary_yahoo_gc_f_yahoo.csv (as-is)
   h4_weekend_volatility.csv <- volatility_momentum_summary.csv (as-is)
+  h3_hourly_delayed_reopen_robustness.csv <- intraday_sensitivity_summary_yahoo_gc_f_yahoo.csv,
+      scenario in {baseline, exclude_delayed_reopen_gt_2h}. Robustness check for holiday/thin-liquidity
+      reopens: drops any weekend whose reopen bar arrived >2h after the expected Sunday-evening COMEX
+      reopen and re-estimates. Confirms beta/t are essentially unchanged without those weekends.
+  h3_hourly_delayed_reopen_events_flagged.csv <- intraday_delayed_reopen_events_yahoo_gc_f_yahoo.csv (as-is).
+      The specific weekends excluded by the check above, with how many hours delayed each reopen was.
 
 Capture metadata
 ----------------
-Captured: 2026-08-27
-Captured from repository commit: 76e89dcdebbdb8707b456a38a86841ed155d394b
+Captured: 2026-08-27 (h1-h4 core files); 2026-08-27 (delayed-reopen robustness files added same day)
+Captured from repository commit: 76e89dcdebbdb8707b456a38a86841ed155d394b (core files) — delayed-reopen
+robustness files were generated after this commit and are not yet committed; see git status.
 
 Important caveat
 -----------------
@@ -46,4 +53,11 @@ After re-running the pipeline (bash run_all.sh), refresh this folder with:
   pd.read_csv(RES / "vecm_price_discovery_summary.csv").to_csv(OUT / "h2_price_discovery.csv", index=False)
   pd.read_csv(RES / "intraday_reopen_regression_summary_yahoo_gc_f_yahoo.csv").to_csv(OUT / "h3_hourly_reopening.csv", index=False)
   pd.read_csv(RES / "volatility_momentum_summary.csv").to_csv(OUT / "h4_weekend_volatility.csv", index=False)
+  sens = pd.read_csv(RES / "intraday_sensitivity_summary_yahoo_gc_f_yahoo.csv")
+  sens[sens["scenario"].isin(["baseline", "exclude_delayed_reopen_gt_2h"])].to_csv(
+      OUT / "h3_hourly_delayed_reopen_robustness.csv", index=False
+  )
+  pd.read_csv(RES / "intraday_delayed_reopen_events_yahoo_gc_f_yahoo.csv").to_csv(
+      OUT / "h3_hourly_delayed_reopen_events_flagged.csv", index=False
+  )
   PY

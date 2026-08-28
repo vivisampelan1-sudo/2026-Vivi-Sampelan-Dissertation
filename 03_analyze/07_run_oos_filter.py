@@ -13,7 +13,7 @@ import pandas as pd
 from scipy import stats
 
 DISS3 = Path(__file__).resolve().parent.parent
-RAW = DISS3 / "data" / "raw"
+RAW = DISS3 / "04_data" / "raw"
 RESULTS = DISS3 / "05_results"
 COST = 5.0 / 1e4
 GRID = [0.0, 0.0025, 0.005, 0.0075, 0.01, 0.015]
